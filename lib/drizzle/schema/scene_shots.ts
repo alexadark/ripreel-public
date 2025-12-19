@@ -88,7 +88,7 @@ export const scene_shots = pgTable(
     // Video generation
     video_url: text("video_url"),
     video_storage_path: text("video_storage_path"),
-    video_status: assetStatusEnum("video_status").default("generating"),
+    video_status: assetStatusEnum("video_status"), // No default - null means "pending" (not yet triggered)
 
     // Veo 3.1 specific fields
     veo_task_id: text("veo_task_id"), // Task ID returned by Veo API (needed for extend)

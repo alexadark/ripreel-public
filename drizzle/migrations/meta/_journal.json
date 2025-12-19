@@ -113,6 +113,13 @@
       "when": 1766069000000,
       "tag": "0015_add_uploading_reel_status",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1766148776831,
+      "tag": "0016_fix_video_status_default",
+      "breakpoints": true
     }
   ]
 }
