@@ -416,10 +416,11 @@ function composeScenePromptShort(
   projectVisualStyle: string
 ): string {
   const parts: string[] = [];
-  const rawData = scene.raw_scene_data;
+  // Use full_data (where scene data is stored) OR raw_scene_data as fallback
+  const rawData = scene.full_data || scene.raw_scene_data;
 
   if (!rawData) {
-    return scene.full_data?.image_generation_prompt || scene.slugline;
+    return scene.slugline;
   }
 
   // 1. Project visual style (brief)
@@ -511,7 +512,8 @@ function composeScenePromptFallback(
   projectVisualStyle: string
 ): string {
   const parts: string[] = [];
-  const rawData = scene.raw_scene_data;
+  // Use full_data (where scene data is stored) OR raw_scene_data as fallback
+  const rawData = scene.full_data || scene.raw_scene_data;
 
   if (!rawData) {
     return scene.slugline;
