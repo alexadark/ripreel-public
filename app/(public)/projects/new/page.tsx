@@ -57,6 +57,12 @@ export default function NewProjectPage() {
       // Call server action to create project and trigger n8n MCP workflow
       const { createProject } = await import("@/app/actions/projects");
       const apiKeys = getApiKeysFromStorage();
+      console.log('🔑 API keys from localStorage:', {
+        anthropicPresent: !!apiKeys.anthropic,
+        anthropicLength: apiKeys.anthropic?.length || 0,
+        kiePresent: !!apiKeys.kie,
+        kieLength: apiKeys.kie?.length || 0,
+      });
       const result = await createProject({
         projectName: projectTitle,
         scriptContent,

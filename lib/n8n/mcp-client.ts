@@ -218,6 +218,12 @@ export async function invokeWorkflow<T = unknown>(
     mode,
     hasCallback: !!callbackUrl,
     hasApiKeys: !!apiKeys?.anthropic || !!apiKeys?.kie,
+    apiKeysDebug: {
+      anthropicPresent: !!apiKeys?.anthropic,
+      anthropicLength: apiKeys?.anthropic?.length || 0,
+      kiePresent: !!apiKeys?.kie,
+      kieLength: apiKeys?.kie?.length || 0,
+    },
     payloadKeys: Object.keys(payload),
   });
 
@@ -233,10 +239,19 @@ export async function invokeWorkflow<T = unknown>(
     // Inject API keys if provided (for user-provided credentials)
     if (apiKeys?.anthropic) {
       requestPayload.anthropic_api_key = apiKeys.anthropic;
+      console.log('✅ Added anthropic_api_key to payload');
+    } else {
+      console.log('⚠️ No anthropic key to add:', { apiKeys });
     }
     if (apiKeys?.kie) {
       requestPayload.kie_api_key = apiKeys.kie;
+      console.log('✅ Added kie_api_key to payload');
+    } else {
+      console.log('⚠️ No kie key to add:', { apiKeys });
     }
+
+    // Log final payload keys (not values for security)
+    console.log('📦 Final request payload keys:', Object.keys(requestPayload));
 
     // Invoke webhook
     const controller = new AbortController();

@@ -59,6 +59,15 @@ export async function createProject(
   payload: UploadScriptPayload
 ): Promise<CreateProjectResult> {
   try {
+    // Debug: Log received API keys
+    console.log('🔐 Server Action received apiKeys:', {
+      hasApiKeys: !!payload.apiKeys,
+      anthropicPresent: !!payload.apiKeys?.anthropic,
+      anthropicLength: payload.apiKeys?.anthropic?.length || 0,
+      kiePresent: !!payload.apiKeys?.kie,
+      kieLength: payload.apiKeys?.kie?.length || 0,
+    });
+
     // Get authenticated user (for Supabase storage)
     const supabase = await createClient();
     const {
