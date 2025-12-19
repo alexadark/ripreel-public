@@ -85,7 +85,7 @@ export default function Home() {
 
         {/* Footer */}
         <footer className="border-t border-[#333] pt-8 text-center text-[#888] font-courier text-xs">
-          <div>© 2024 RIPREEL.IO // ALL RIGHTS RESERVED</div>
+          <div>© 2025 RIPREEL.IO // ALL RIGHTS RESERVED</div>
         </footer>
       </div>
     </div>

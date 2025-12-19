@@ -21,6 +21,44 @@ import type { AIModel } from '@/lib/bible/models';
 import { env } from '@/lib/env';
 import { createClient } from '@supabase/supabase-js';
 import { createShotsWithAI } from './shots';
+import { z } from 'zod';
+
+// ============================================================================
+// Zod Validation Schemas
+// ============================================================================
+
+const uuidSchema = z.string().uuid('Invalid UUID format');
+
+const sceneModelSelectionSchema = z.enum(['seedream', 'nano-banana', 'both']);
+
+const refinementModelSchema = z.enum(['seedream', 'nano-banana']);
+
+const generateSceneVariantsSchema = z.object({
+  sceneId: uuidSchema,
+  modelSelection: sceneModelSelectionSchema.optional().default('both'),
+});
+
+const selectVariantSchema = z.object({
+  variantId: uuidSchema,
+});
+
+const refineVariantSchema = z.object({
+  variantId: uuidSchema,
+  modelSelection: refinementModelSchema,
+  refinementPrompt: z.string().min(1, 'Refinement prompt is required').max(2000, 'Refinement prompt too long'),
+});
+
+const sceneIdSchema = z.object({
+  sceneId: uuidSchema,
+});
+
+const variantIdSchema = z.object({
+  variantId: uuidSchema,
+});
+
+const projectIdSchema = z.object({
+  projectId: uuidSchema,
+});
 
 // ============================================================================
 // Types
@@ -600,6 +638,12 @@ export async function generateSceneVariants(
   apiKeys?: ApiKeys
 ): Promise<SceneImageActionResult> {
   try {
+    // Validate input
+    const validation = generateSceneVariantsSchema.safeParse({ sceneId, modelSelection });
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+
     console.log('🎬 Generating scene variants for:', sceneId, 'with model:', modelSelection);
 
     // Get scene
@@ -826,6 +870,12 @@ export async function selectSceneVariant(
   variantId: string
 ): Promise<SceneImageActionResult> {
   try {
+    // Validate input
+    const validation = selectVariantSchema.safeParse({ variantId });
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+
     console.log('✅ Selecting scene variant:', variantId);
 
     // Get variant
@@ -919,6 +969,12 @@ export async function unselectSceneVariant(
   variantId: string
 ): Promise<SceneImageActionResult> {
   try {
+    // Validate input
+    const validation = variantIdSchema.safeParse({ variantId });
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+
     console.log('↩️ Unselecting scene variant:', variantId);
 
     // Get variant
@@ -1005,6 +1061,12 @@ export async function refineSceneVariant(
   apiKeys?: ApiKeys
 ): Promise<SceneImageActionResult> {
   try {
+    // Validate input
+    const validation = refineVariantSchema.safeParse({ variantId, modelSelection, refinementPrompt });
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+
     console.log('🔧 Refining scene variant:', variantId, 'with model:', modelSelection);
 
     // Get the source variant
@@ -1201,6 +1263,12 @@ export async function deleteFailedVariants(
   sceneId: string
 ): Promise<SceneImageActionResult> {
   try {
+    // Validate input
+    const validation = sceneIdSchema.safeParse({ sceneId });
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+
     console.log('🗑️ Deleting failed variants for scene:', sceneId);
 
     // Get scene for project_id (for revalidation)
@@ -1249,6 +1317,12 @@ export async function deleteAllVariants(
   sceneId: string
 ): Promise<SceneImageActionResult> {
   try {
+    // Validate input
+    const validation = sceneIdSchema.safeParse({ sceneId });
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+
     console.log('🗑️ Deleting all non-selected variants for scene:', sceneId);
 
     // Get scene for project_id (for revalidation)
@@ -1294,6 +1368,12 @@ export async function deleteVariant(
   variantId: string
 ): Promise<SceneImageActionResult> {
   try {
+    // Validate input
+    const validation = variantIdSchema.safeParse({ variantId });
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+
     console.log('🗑️ Deleting variant:', variantId);
 
     // Get variant for scene_id
@@ -1350,6 +1430,12 @@ export async function retryVariant(
   apiKeys?: ApiKeys
 ): Promise<SceneImageActionResult> {
   try {
+    // Validate input
+    const validation = variantIdSchema.safeParse({ variantId });
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+
     console.log('🔄 Retrying variant:', variantId);
 
     // Get the failed variant
@@ -1453,6 +1539,12 @@ export async function bulkApproveSceneImages(
   projectId: string
 ): Promise<SceneImageActionResult & { approvedCount?: number }> {
   try {
+    // Validate input
+    const validation = projectIdSchema.safeParse({ projectId });
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+
     console.log('📦 Bulk approving scene images for project:', projectId);
 
     // Get all scenes for this project

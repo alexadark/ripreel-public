@@ -9,6 +9,70 @@ import {
 } from '@/lib/drizzle/schema';
 import { eq, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
+
+// ============================================================================
+// Zod Validation Schemas
+// ============================================================================
+
+const uuidSchema = z.string().uuid('Invalid UUID format');
+
+const characterIdSchema = z.object({
+  characterId: uuidSchema,
+});
+
+const locationIdSchema = z.object({
+  locationId: uuidSchema,
+});
+
+const propIdSchema = z.object({
+  propId: uuidSchema,
+});
+
+const projectIdSchema = z.object({
+  projectId: uuidSchema,
+});
+
+const timeVariantSchema = z.enum(['day', 'night', 'dawn', 'dusk']).optional();
+
+const updateCharacterSchema = z.object({
+  characterId: uuidSchema,
+  updates: z.object({
+    name: z.string().min(1).max(100).optional(),
+    role: z.enum(['lead', 'supporting', 'background']).optional(),
+    visual_dna: z.string().max(5000).optional(),
+    backstory: z.string().max(10000).optional(),
+  }),
+});
+
+const updateLocationSchema = z.object({
+  locationId: uuidSchema,
+  updates: z.object({
+    name: z.string().min(1).max(100).optional(),
+    type: z.enum(['interior', 'exterior']).optional(),
+    visual_description: z.string().max(5000).optional(),
+    time_variants: z.object({
+      day: z.string().optional(),
+      night: z.string().optional(),
+      dawn: z.string().optional(),
+      dusk: z.string().optional(),
+    }).nullable().optional(),
+  }),
+});
+
+const updatePropSchema = z.object({
+  propId: uuidSchema,
+  updates: z.object({
+    name: z.string().min(1).max(100).optional(),
+    importance: z.enum(['high', 'medium', 'low']).optional(),
+    visual_description: z.string().max(2000).optional(),
+  }),
+});
+
+const batchUpdatePropsSchema = z.object({
+  projectId: uuidSchema,
+  propNames: z.array(z.string().min(1).max(100)),
+});
 
 // ============================================================================
 // Types
@@ -37,6 +101,12 @@ export async function generateCharacterPortrait(
   characterId: string
 ): Promise<BibleActionResult> {
   try {
+    // Validate input
+    const validation = characterIdSchema.safeParse({ characterId });
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+
     console.log('🎨 Generating character portrait:', characterId);
 
     const [character] = await db
@@ -89,6 +159,12 @@ export async function approveCharacterPortrait(
   imageUrl?: string
 ): Promise<BibleActionResult> {
   try {
+    // Validate input
+    const validation = characterIdSchema.safeParse({ characterId });
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+
     console.log('✅ Approving character portrait:', characterId);
 
     const [character] = await db
@@ -142,6 +218,12 @@ export async function updateCharacter(
   }
 ): Promise<BibleActionResult> {
   try {
+    // Validate input
+    const validation = updateCharacterSchema.safeParse({ characterId, updates });
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+
     const [character] = await db
       .select()
       .from(projectCharacters)
@@ -202,6 +284,16 @@ export async function generateLocationImage(
   timeVariant?: 'day' | 'night' | 'dawn' | 'dusk'
 ): Promise<BibleActionResult> {
   try {
+    // Validate input
+    const validation = locationIdSchema.safeParse({ locationId });
+    const timeValidation = timeVariantSchema.safeParse(timeVariant);
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+    if (!timeValidation.success) {
+      return { success: false, error: 'Invalid time variant' };
+    }
+
     console.log('🎨 Generating location image:', locationId, timeVariant);
 
     const [location] = await db
@@ -255,6 +347,12 @@ export async function approveLocationImage(
   imageUrl?: string
 ): Promise<BibleActionResult> {
   try {
+    // Validate input
+    const validation = locationIdSchema.safeParse({ locationId });
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+
     console.log('✅ Approving location image:', locationId);
 
     const [location] = await db
@@ -313,6 +411,12 @@ export async function updateLocation(
   }
 ): Promise<BibleActionResult> {
   try {
+    // Validate input
+    const validation = updateLocationSchema.safeParse({ locationId, updates });
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+
     const [location] = await db
       .select()
       .from(projectLocations)
@@ -372,6 +476,12 @@ export async function generatePropImage(
   propId: string
 ): Promise<BibleActionResult> {
   try {
+    // Validate input
+    const validation = propIdSchema.safeParse({ propId });
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+
     console.log('🎨 Generating prop image:', propId);
 
     const [prop] = await db
@@ -422,6 +532,12 @@ export async function updateProp(
   }
 ): Promise<BibleActionResult> {
   try {
+    // Validate input
+    const validation = updatePropSchema.safeParse({ propId, updates });
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+
     const [prop] = await db
       .select()
       .from(projectProps)
@@ -466,6 +582,12 @@ export async function approveProp(
   imageUrl?: string
 ): Promise<BibleActionResult> {
   try {
+    // Validate input
+    const validation = propIdSchema.safeParse({ propId });
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+
     console.log('✅ Approving prop:', propId);
 
     const [prop] = await db
@@ -515,6 +637,12 @@ export async function approveAllBibleAssets(
   projectId: string
 ): Promise<BibleActionResult> {
   try {
+    // Validate input
+    const validation = projectIdSchema.safeParse({ projectId });
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+
     console.log('✅ Approving all Bible assets for project:', projectId);
     const now = new Date();
 
@@ -657,6 +785,12 @@ export async function skipBibleReview(
   projectId: string
 ): Promise<BibleActionResult> {
   try {
+    // Validate input
+    const validation = projectIdSchema.safeParse({ projectId });
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+
     console.log('⏭️ Skipping Bible review for project:', projectId);
 
     // Mark all Bible assets as approved without images
@@ -706,6 +840,12 @@ export async function updatePropToDescribe(
   propId: string
 ): Promise<BibleActionResult> {
   try {
+    // Validate input
+    const validation = propIdSchema.safeParse({ propId });
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+
     const [prop] = await db
       .select()
       .from(projectProps)
@@ -748,6 +888,12 @@ export async function batchUpdatePropsToDescribe(
   propNames: string[]
 ): Promise<BibleActionResult> {
   try {
+    // Validate input
+    const validation = batchUpdatePropsSchema.safeParse({ projectId, propNames });
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+
     const props = await db
       .select()
       .from(projectProps)
@@ -800,6 +946,12 @@ export async function listProjectProps(
   projectId: string
 ): Promise<BibleActionResult> {
   try {
+    // Validate input
+    const validation = projectIdSchema.safeParse({ projectId });
+    if (!validation.success) {
+      return { success: false, error: validation.error.errors[0].message };
+    }
+
     const props = await db
       .select({
         id: projectProps.id,

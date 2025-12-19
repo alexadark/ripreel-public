@@ -7,7 +7,7 @@
 
 import { db } from "@/lib/drizzle/db";
 import { scene_videos, scenes, type Scene } from "@/lib/drizzle/schema";
-import { eq, count } from "drizzle-orm";
+import { eq, count, inArray } from "drizzle-orm";
 
 // ============================================================================
 // Constants
@@ -112,8 +112,7 @@ export async function getProjectVideoStatus(projectId: string): Promise<
   const sceneIds = projectScenes.map((s) => s.id);
   const videos = sceneIds.length > 0
     ? await db.select().from(scene_videos).where(
-        // Use SQL IN for efficiency
-        eq(scene_videos.scene_id, sceneIds[0]) // Placeholder, will need proper implementation
+        inArray(scene_videos.scene_id, sceneIds)
       )
     : [];
 
